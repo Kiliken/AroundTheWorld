@@ -1,23 +1,5 @@
-#include <SFML/Graphics.hpp>
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <stdlib.h>
-#include <cstdlib>
-#include <ctime>
-#include <random>
-#include <numeric>
-#include <string>
-#include <cmath>
-#include "Noise.h"
-#include "TerrainType.h"
-
-#define ASSETS(file) ("../assets/"##file)
-
-#define F2() (0.5 * (sqrt(3) - 1))
-#define G2() ((3 - sqrt(3)) / 6)
-#define F3() (1 / 3)
-#define G3() (1 / 6)
+#pragma once
+#include "utils.h"
 
 namespace utils
 {

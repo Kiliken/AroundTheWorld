@@ -1,4 +1,4 @@
-#include "utils.cpp"
+#include "utils.h"
 
 int main()
 {
@@ -6,7 +6,7 @@ int main()
     // WINDOW
     sf::RenderWindow window(sf::VideoMode({1280, 720}), "Around The World");
     // window.setMouseCursorVisible(false);
-    window.setFramerateLimit(60);
+    window.setFramerateLimit(60); 
 
     sf::Clock clock;
 

@@ -3,7 +3,7 @@
 set sfmlVersion=3.0.2
 set buildAll=1
 
-if exist "%cd%/build" set buildAll=0
+if exist "%cd%/Assets" set buildAll=0
 if exist "%cd%/SFML.zip" goto ExitProgram
 
 

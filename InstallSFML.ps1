@@ -13,21 +13,22 @@ $wc.DownloadFile($SfmlDownloadUrl, "$($PSScriptRoot)\SFML.zip")
 Write-Output "[sfml-vsbt-setup] Extracting SFML-$SfmlVersion-windows-vc17-64-bit..."
 [System.IO.Compression.ZipFile]::ExtractToDirectory("$($PSScriptRoot)\SFML.zip", $PSScriptRoot)
 
+New-Item -Path "$($PSScriptRoot)\build" -ItemType Directory
+Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-graphics-3.dll" -Destination "$($PSScriptRoot)\build"
+Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-window-3.dll" -Destination "$($PSScriptRoot)\build"
+Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-audio-3.dll" -Destination "$($PSScriptRoot)\build"
+Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-network-3.dll" -Destination "$($PSScriptRoot)\build"
+Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-system-3.dll" -Destination "$($PSScriptRoot)\build"
+	
+
 if ($BuildProj -eq 1) {
 	Write-Output "[openSiv-vsbt-setup] No avible project detected"
 	Write-Output "[openSiv-vsbt-setup] Setting up template..."
 	
-	New-Item -Path "$($PSScriptRoot)\build" -ItemType Directory
-	Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-graphics-3.dll" -Destination "$($PSScriptRoot)\build"
-	Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-window-3.dll" -Destination "$($PSScriptRoot)\build"
-	Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-audio-3.dll" -Destination "$($PSScriptRoot)\build"
-	Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-network-3.dll" -Destination "$($PSScriptRoot)\build"
-	Move-Item -Path "$($PSScriptRoot)\SFML-$SfmlVersion\bin\sfml-system-3.dll" -Destination "$($PSScriptRoot)\build"
-	
+	New-Item -Path "$($PSScriptRoot)\Assets" -ItemType Directory
 	Add-Content -Path "$($PSScriptRoot)\.gitignore" -Value "/[Ss]FML-$SfmlVersion/"
 	(Get-Content -Path "$($PSScriptRoot)\BuildGame.bat") -replace 'xVersioNx', $SfmlVersion | Set-Content -Path "$($PSScriptRoot)\BuildGame.bat"
 
-	
 }
 
 <#
