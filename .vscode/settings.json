@@ -78,6 +78,6 @@
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/src",
-        "${workspaceFolder}/SFML-3.0.2/include"
+        "${workspaceFolder}/SFML-*/include"
     ]
 }
