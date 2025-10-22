@@ -6,7 +6,7 @@ int main()
     // WINDOW
     sf::RenderWindow window(sf::VideoMode({1280, 720}), "Around The World");
     // window.setMouseCursorVisible(false);
-    window.setFramerateLimit(60); 
+    window.setFramerateLimit(60);
 
     sf::Clock clock;
 
@@ -55,17 +55,25 @@ int main()
         }
     }
 
-    sf::VertexArray pixels(sf::PrimitiveType::Points, width * height);
+    std::vector<sf::VertexArray> map(16);
+    std::vector<sf::Transform> mapPos(16);
 
-    for (int y = 0; y < height; ++y)
+    for (int i = 0; i < map.size(); i++)
     {
-        for (int x = 0; x < width; ++x)
+        map[i] = sf::VertexArray(sf::PrimitiveType::Points, width * height);
+        mapPos[i] = sf::Transform();
+        mapPos[i].translate({512.f,200.f});
+        for (int y = 0; y < height; ++y)
         {
-            int index = y * width + x;
-            pixels[index].position = sf::Vector2f(x, y);
-            pixels[index].color = sf::Color(colorMap[x][y][0], colorMap[x][y][1], colorMap[x][y][2]);
+            for (int x = 0; x < width; ++x)
+            {
+                int index = y * width + x;
+                map[i][index].position = sf::Vector2f(x, y);
+                map[i][index].color = sf::Color(colorMap[x][y][0], colorMap[x][y][1], colorMap[x][y][2]);
+            }
         }
     }
+    mapPos[1].translate({-512,-512});
 
     // MAIN LOOP
     while (window.isOpen())
@@ -82,6 +90,7 @@ int main()
         }
 
         // win lose condition
+        /*
         timer += deltaTime;
         if (timer > 0.5f)
         {
@@ -114,11 +123,16 @@ int main()
                     pixels[index].color = sf::Color(colorMap[x][y][0], colorMap[x][y][1], colorMap[x][y][2]);
                 }
             }
-        }
+        }*/
 
         // RENDERING
         window.clear();
-        window.draw(pixels);
+
+        for (int i = 0; i < map.size(); i++)
+        {
+            //mapPos[i].translate({0.01f * (float)i, 0.01f * (float)i});
+            window.draw(map[i], mapPos[i]);
+        }
         window.display();
     }
 }
