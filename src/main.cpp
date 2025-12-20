@@ -9,9 +9,8 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include "loadShader.h"
 #include "loadDDS.h"
-#include "loadOBJ.h"
 #include "Inputs.h"
-#include "vboIndexer.h"
+#include "voxelBuffers.h"
 
 int main(void)
 {
@@ -23,7 +22,7 @@ int main(void)
 
     /* Create a windowed mode window and its OpenGL context */
     float ImGuiMainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); // Valid on GLFW 3.3+ only
-    window = glfwCreateWindow((int)(1280 * ImGuiMainScale), (int)(800 * ImGuiMainScale), "OpenGL", NULL, NULL);
+    window = glfwCreateWindow((int)(1280 * ImGuiMainScale), (int)(800 * ImGuiMainScale), "Around The World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -52,7 +51,6 @@ int main(void)
 
     //UI Variables
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    glm::vec3 lightPos = glm::vec3(0, 0, 4);
 
 
     // Initialize Inputs
@@ -74,20 +72,11 @@ int main(void)
 
     glEnable(GL_CULL_FACE);
 
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
+
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
 
-    // Read our .obj file
-    std::vector<glm::vec3> vertices;
-    std::vector<glm::vec2> uvs;
-    std::vector<glm::vec3> normals;
-    std::vector<unsigned short> indices;
-    bool res = loadOBJ("../res/cube.obj", vertices, uvs, normals);
-
-    // fill "indices" as needed
-    std::vector<glm::vec3> idxVertices;
-    std::vector<glm::vec2> idxUvs;
-    std::vector<glm::vec3> idxNormals;
-    indexVBO(vertices,uvs,normals,indices, idxVertices,idxUvs,idxNormals);
     
 
 
@@ -97,7 +86,7 @@ int main(void)
     GLuint elementbuffer;
     glGenBuffers(1, &elementbuffer);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), &indices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(voxel_index_data), &voxel_index_data, GL_STATIC_DRAW);
 
     GLuint VertexArrayID;
     glGenVertexArrays(1, &VertexArrayID);
@@ -106,17 +95,13 @@ int main(void)
     GLuint vertexbuffer;
     glGenBuffers(1, &vertexbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    glBufferData(GL_ARRAY_BUFFER, idxVertices.size() * sizeof(glm::vec3), &idxVertices[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(voxel_vertex_data), &voxel_vertex_data, GL_STATIC_DRAW);
 
     GLuint uvsbuffer;
     glGenBuffers(1, &uvsbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, uvsbuffer);
-    glBufferData(GL_ARRAY_BUFFER, idxUvs.size() * sizeof(glm::vec3), &idxUvs[0], GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(voxel_uv_data), &voxel_uv_data, GL_STATIC_DRAW);
 
-    GLuint normalbuffer;
-    glGenBuffers(1, &normalbuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-    glBufferData(GL_ARRAY_BUFFER, idxNormals.size() * sizeof(glm::vec3), &idxNormals[0], GL_STATIC_DRAW);
 
     
     GLuint DiffuseTexture = loadDDS("../res/diffuse.dds");
@@ -184,10 +169,9 @@ int main(void)
             
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("Around The World");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::InputFloat3("Position", glm::value_ptr(lightPos));
 
             //ImGui::SliderFloat("float", nullptr, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a colorwd
@@ -241,16 +225,6 @@ int main(void)
             (void *)0 // array buffer offset
         );
 
-        glEnableVertexAttribArray(2);
-        glBindBuffer(GL_ARRAY_BUFFER, normalbuffer);
-        glVertexAttribPointer(
-            2,        // attribute
-            3,        // size
-            GL_FLOAT, // type
-            GL_FALSE, // normalized?
-            0,        // stride
-            (void *)0 // array buffer offset
-        );
 
         
         // This is done in the main loop since each model will have a different MVP matrix (At least for the M part)
@@ -269,16 +243,15 @@ int main(void)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementbuffer);
         glDrawElements(
             GL_TRIANGLES,    // mode
-            indices.size(),  // count
-            GL_UNSIGNED_SHORT, // type
+            sizeof(voxel_index_data),  // count
+            GL_UNSIGNED_INT, // type
             (void *)0        // element array buffer offset
         );
 
+        
+
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
-        glDisableVertexAttribArray(2);
-        glDisableVertexAttribArray(3);
-        glDisableVertexAttribArray(4);
 
         if (inputs.showUI)
         {
@@ -296,9 +269,6 @@ int main(void)
 
     glDeleteBuffers(1, &vertexbuffer);
     glDeleteBuffers(1, &uvsbuffer);
-    glDeleteBuffers(1, &normalbuffer);
-    glDeleteBuffers(1, &uvsbuffer);
-    glDeleteBuffers(1, &normalbuffer);
     glDeleteTextures(1, &DiffuseTexture);
     glDeleteVertexArrays(1, &VertexArrayID);
     glDeleteProgram(programID);
