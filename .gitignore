@@ -5,7 +5,6 @@
 *.slo
 *.lo
 *.o
-*.obj
 
 # Precompiled Headers
 *.gch
@@ -43,4 +42,5 @@
 
 # Project Specific
 *.zip
-/[Ss]FML-3.0.2/
+/[Dd]ep/
+/[Bb]uild/

@@ -74,11 +74,10 @@
         "xloctime": "cpp",
         "xmemory": "cpp",
         "xtr1common": "cpp",
-        "xtree": "cpp",
-        "xstddef": "cpp"
+        "xtree": "cpp"
     },
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/src",
-        "${workspaceFolder}/SFML-*/include"
+        "${workspaceFolder}/dep/include"
     ]
 }

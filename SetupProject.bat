@@ -1,17 +1,21 @@
 @echo off
 
-set sfmlVersion=3.0.2
-set buildAll=1
-
-if exist "%cd%/Assets" set buildAll=0
-if exist "%cd%/SFML.zip" goto ExitProgram
+if exist "%cd%/dep" goto ExitProgram
+if not exist "%localappdata%/w64devkit" goto InstallGcc
 
 
 :SetupProject
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0InstallSFML.ps1" -Command %buildAll% "%sfmlVersion%"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0InstallOpenGL.ps1"
 echo Project Setup completed...
 pause
 exit
+
+:InstallGcc
+echo Installing Gcc...
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0InstallGcc.ps1"
+echo Waiting for Gcc to finish installing...
+pause
+goto SetupProject
 
 :ExitProgram
 echo Project is already installed...

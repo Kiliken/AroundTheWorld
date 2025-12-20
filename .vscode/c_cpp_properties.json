@@ -3,7 +3,7 @@
     {
       "name": "Win64-MSVC",
       "includePath": [
-        "${workspaceFolder}/SFML-*/include",
+        "${workspaceFolder}/dep/include",
         "${workspaceFolder}/src",
         "${workspaceFolder}"
       ],
