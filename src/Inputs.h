@@ -1,7 +1,8 @@
 #pragma once
 
 #include <GL/glew.h>
-#include <GLFW/glfw3.h>
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -9,13 +10,13 @@ class Inputs
 {
 private:
     // window reference
-    GLFWwindow *win;
+    SDL_Window *win;
 
     // win size
     int winWidth, winHeight;
 
     // mouse Pos
-    double xpos, ypos;
+    float xpos, ypos;
     // mouse Scroll
     double scrollY = 0.0;
     // horizontal angle : toward -Z
@@ -31,7 +32,7 @@ private:
     bool tabWasDown;
 
 public:
-    Inputs(GLFWwindow *mainWindow);
+    Inputs(SDL_Window *mainWindow);
     ~Inputs();
     void Update(float dt);
 
@@ -47,11 +48,15 @@ public:
     float FoV;
 };
 
-Inputs::Inputs(GLFWwindow *mainWindow)
+Inputs::Inputs(SDL_Window *mainWindow)
 {
     win = mainWindow;
-    glfwGetWindowSize(win, &winWidth, &winHeight);
-    glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
+
+    // glfwGetWindowSize(win, &winWidth, &winHeight);
+    // glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
+
+    SDL_GetWindowSize(win, &winWidth, &winHeight);
+    SDL_WarpMouseInWindow(win, winWidth / 2.0f, winHeight / 2.0f);
 }
 
 Inputs::~Inputs()
@@ -60,14 +65,14 @@ Inputs::~Inputs()
 
 void Inputs::Update(float dt)
 {
-    if(!showUI)
+    const bool *key_states = SDL_GetKeyboardState(NULL);
+
+    if (!showUI)
     {
-        // Get mouse position
-        glfwGetCursorPos(win, &xpos, &ypos);
-        // Reset mouse position
-        glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
+        Uint32 mouseInputs = SDL_GetMouseState(&xpos, &ypos);
+        SDL_WarpMouseInWindow(win, winWidth / 2.0f, winHeight / 2.0f);
     }
-    
+
     horizontalAngle += mouseSpeed * dt * float(winWidth / 2 - xpos);
     verticalAngle += mouseSpeed * dt * float(winHeight / 2 - ypos);
 
@@ -87,39 +92,38 @@ void Inputs::Update(float dt)
     up = glm::cross(right, direction);
 
     {
-        int tabState = glfwGetKey(win, GLFW_KEY_TAB);
-
         // Move forward
-        if (glfwGetKey(win, GLFW_KEY_W) == GLFW_PRESS)
+        if (key_states[SDL_SCANCODE_W])
         {
             position += direction * dt * speed;
         }
         // Move backward
-        if (glfwGetKey(win, GLFW_KEY_S) == GLFW_PRESS)
+        if (key_states[SDL_SCANCODE_S])
         {
             position -= direction * dt * speed;
         }
         // Strafe right
-        if (glfwGetKey(win, GLFW_KEY_D) == GLFW_PRESS)
+        if (key_states[SDL_SCANCODE_D])
         {
             position += right * dt * speed;
         }
         // Strafe left
-        if (glfwGetKey(win, GLFW_KEY_A) == GLFW_PRESS)
+        if (key_states[SDL_SCANCODE_A])
         {
             position -= right * dt * speed;
         }
-        if(tabState == GLFW_PRESS && !tabWasDown)
+        if (key_states[SDL_SCANCODE_TAB])
         {
             showUI = !showUI;
-            glfwSetInputMode(win, GLFW_CURSOR, (showUI ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN));
-            glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
+            // glfwSetInputMode(win, GLFW_CURSOR, (showUI ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN));
+            // glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
         }
-        if (glfwGetKey(win, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        if (key_states[SDL_SCANCODE_ESCAPE])
         {
-            glfwSetWindowShouldClose(win, GLFW_TRUE);
+            // glfwSetWindowShouldClose(win, GLFW_TRUE);
+            SDL_Event e; 
+            e.type = SDL_EVENT_QUIT;
+            SDL_PushEvent(&e);
         }
-        
-        tabWasDown = (tabState == GLFW_PRESS);
     }
 }
