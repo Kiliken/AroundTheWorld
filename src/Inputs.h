@@ -69,6 +69,9 @@ void Inputs::Update(float dt)
 
     if (!showUI)
     {
+        SDL_HideCursor();
+        SDL_SetWindowRelativeMouseMode(win, true);
+
         Uint32 mouseInputs = SDL_GetMouseState(&xpos, &ypos);
         SDL_WarpMouseInWindow(win, winWidth / 2.0f, winHeight / 2.0f);
     }
@@ -115,12 +118,12 @@ void Inputs::Update(float dt)
         if (key_states[SDL_SCANCODE_TAB])
         {
             showUI = !showUI;
-            // glfwSetInputMode(win, GLFW_CURSOR, (showUI ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_HIDDEN));
-            // glfwSetCursorPos(win, winWidth / 2, winHeight / 2);
+            SDL_ShowCursor();
+            SDL_SetWindowRelativeMouseMode(win, false);
+            SDL_WarpMouseInWindow(win, winWidth / 2.0f, winHeight / 2.0f);
         }
         if (key_states[SDL_SCANCODE_ESCAPE])
         {
-            // glfwSetWindowShouldClose(win, GLFW_TRUE);
             SDL_Event e; 
             e.type = SDL_EVENT_QUIT;
             SDL_PushEvent(&e);

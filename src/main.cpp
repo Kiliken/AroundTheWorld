@@ -3,7 +3,11 @@
 #include <GL/glew.h>
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include <SDL3/SDL_opengl.h>
 #include <iostream>
+#include <imgui/imgui.h>
+#include <imgui/imgui_impl_sdl3.h>
+#include <imgui/imgui_impl_opengl3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -18,6 +22,8 @@ static SDL_GLContext glctx = NULL;
 static Inputs *inputs = NULL;
 
 int winWidth, winHeight;
+ImVec4 clear_color;
+
 GLuint elementbuffer;
 GLuint VertexArrayID;
 GLuint vertexbuffer;
@@ -34,8 +40,15 @@ float lastTime = 0.0f;
 /* This function runs once at startup. */
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 {
+
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+    float main_scale = SDL_GetDisplayContentScale(SDL_GetPrimaryDisplay());
+    SDL_WindowFlags window_flags = SDL_WINDOW_OPENGL | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+
     /* Create the window */
-    window = SDL_CreateWindow("Around The World", 1280, 720, SDL_WINDOW_OPENGL);
+    window = SDL_CreateWindow("Around The World", 1280 , 800 , window_flags);
 
     if (!window)
     {
@@ -47,8 +60,33 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
     glctx = SDL_GL_CreateContext(window);
     SDL_GL_MakeCurrent(window, glctx);
 
+    SDL_GL_SetSwapInterval(1); // Enable vsync
+    SDL_SetWindowPosition(window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+    SDL_ShowWindow(window);
+
     if (glewInit() == GLEW_OK)
         std::cout << glGetString(GL_VERSION) << std::endl;
+
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;  // Enable Gamepad Controls
+
+    // Setup Dear ImGui style
+    ImGui::StyleColorsDark();
+    // ImGui::StyleColorsLight();
+
+    // Setup scaling
+    ImGuiStyle &style = ImGui::GetStyle();
+
+    // Setup Platform/Renderer backends
+    ImGui_ImplSDL3_InitForOpenGL(window, glctx);
+    ImGui_ImplOpenGL3_Init("#version 330");
+
+    clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     inputs = new Inputs(window);
 
@@ -109,6 +147,11 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[])
 /* This function runs when a new event (mouse input, keypresses, etc) occurs. */
 SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 {
+    if (inputs->showUI)
+    {
+        ImGui_ImplSDL3_ProcessEvent(event);
+    }
+    
     if (event->type == SDL_EVENT_QUIT)
     {
         return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
@@ -119,7 +162,7 @@ SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event)
 /* This function runs once per frame, and is the heart of the program. */
 SDL_AppResult SDL_AppIterate(void *appstate)
 {
-    //glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
+    glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
 
     const Uint64 currentTime = SDL_GetPerformanceCounter();
     float deltaTime = (float)(currentTime - lastTime) / (float)SDL_GetPerformanceFrequency();
@@ -127,38 +170,37 @@ SDL_AppResult SDL_AppIterate(void *appstate)
 
     inputs->Update(deltaTime);
 
-    //if (inputs.showUI)
+    if (inputs->showUI)
     {
         // Start the Dear ImGui frame
-        //ImGui_ImplOpenGL3_NewFrame();
-        //ImGui_ImplGlfw_NewFrame();
-        //ImGui::NewFrame();
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
     }
 
-    //if (inputs.showUI)
+    if (inputs->showUI)
     {
 
         static int counter = 0;
 
-        //ImGui::Begin("Around The World"); // Create a window called "Hello, world!" and append into it.
+        ImGui::Begin("Around The World"); // Create a window called "Hello, world!" and append into it.
 
-        //ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
+        ImGui::Text("This is some useful text."); // Display some text (you can use a format strings too)
 
-        // ImGui::SliderFloat("float", nullptr, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        //ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a colorwd
+        //ImGui::SliderFloat("float", nullptr, 0.0f, 1.0f);        // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float *)&clear_color); // Edit 3 floats representing a colorwd
 
-        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
-        //ImGui::End();
+        // ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::End();
     }
-
 
     // Projection matrix : 45&deg; Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
     Projection = glm::perspective(glm::radians(60.0f), 16.0f / 9.0f, 0.1f, 100.0f);
     // Camera matrix
     glm::mat4 View = glm::lookAt(
-        inputs->position,                    // Camera is here
+        inputs->position,                     // Camera is here
         inputs->position + inputs->direction, // and looks here : at the same position, plus "direction"
-        inputs->up                           // Head is up (set to 0,-1,0 to look upside-down)
+        inputs->up                            // Head is up (set to 0,-1,0 to look upside-down)
     );
 
     // ModelMatrix
@@ -218,11 +260,11 @@ SDL_AppResult SDL_AppIterate(void *appstate)
     glDisableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
 
-    //if (inputs.showUI)
+    if (inputs->showUI)
     {
         // Rendering
-        //ImGui::Render();
-        //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     }
 
     SDL_GL_SwapWindow(window);
@@ -239,6 +281,10 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result)
 
     SDL_GL_DestroyContext(glctx);
     glctx = nullptr;
+
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplSDL3_Shutdown();
+    ImGui::DestroyContext();
 
     delete (inputs);
     inputs = nullptr;
