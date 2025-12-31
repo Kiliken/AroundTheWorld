@@ -1,28 +1,17 @@
 @echo off
 
+if exist "%localappdata%/w64cmake/bin"	set PATH=%localappdata%/w64cmake/bin;%PATH%
 if exist "%localappdata%/w64devkit/bin" set PATH=%localappdata%/w64devkit/bin;%PATH%
-
-
-SET includes=-I%cd%\src -I%cd%\dep\include
-SET links=-L%cd%\src ^
--L%cd%\dep\lib ^
--lopengl32 -luser32 -lshell32 -lgdi32 -lkernel32 -ladvapi32 -lole32 ^
--loleaut32 -luuid -lodbc32 -lodbccp32 -lglew32 -lSDL3.dll
-SET defines=-DRELEASE
 
 if not exist "%cd%/build" md build
 
 
-g++ -o "%cd%\build\App.exe" %includes% %defines% ^
- "%cd%\src\*.cpp" ^
- "%cd%\dep\include\imgui\imgui.cpp" ^
- "%cd%\dep\include\imgui\imgui_draw.cpp" ^
- "%cd%\dep\include\imgui\imgui_tables.cpp" ^
- "%cd%\dep\include\imgui\imgui_widgets.cpp" ^
- "%cd%\dep\include\imgui\imgui_demo.cpp" ^
- "%cd%\dep\include\imgui\imgui_impl_sdl3.cpp" ^
- "%cd%\dep\include\imgui\imgui_impl_opengl3.cpp" ^
- %links%
+cmake -S %cd% -B %cd%/build -G "MinGW Makefiles" ^
+  -DCMAKE_C_COMPILER="%localappdata%/w64devkit/bin/gcc.exe" ^
+  -DCMAKE_CXX_COMPILER="%localappdata%/w64devkit/bin/g++.exe"
+
+cmake --build %cd%/build
+
 
 
 if %errorlevel% neq 0 (
